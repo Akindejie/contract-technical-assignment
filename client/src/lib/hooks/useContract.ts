@@ -6,14 +6,7 @@ import {
   waitForTransaction,
 } from '@/lib/web3/provider';
 import { GAS_LIMITS } from '@/constants/contracts';
-import {
-  User,
-  Transaction,
-  Approval,
-  UserRole,
-  TransactionStatus,
-  ApprovalStatus,
-} from '@/types/contracts';
+import { User, Transaction, Approval, UserRole } from '@/types/contracts';
 import { toast } from 'sonner';
 
 // Query keys
@@ -414,10 +407,9 @@ export const useDashboardMetrics = () => {
       try {
         const contract = getContract('financialPlatform', chainId, provider);
 
-        const [transactionCount, approvalCount, userCount, pendingApprovals] =
+        const [transactionCount, userCount, pendingApprovals] =
           await Promise.all([
             contract.getTransactionCount(),
-            contract.getApprovalCount(),
             contract.getUserCount(),
             contract.getPendingApprovals(),
           ]);

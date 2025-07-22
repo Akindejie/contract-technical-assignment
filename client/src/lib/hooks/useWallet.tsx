@@ -12,7 +12,6 @@ import {
   connectWallet,
   disconnectWallet,
   switchNetwork,
-  isSupportedNetwork,
 } from '@/lib/web3/provider';
 
 interface WalletContextType extends WalletState {
@@ -46,9 +45,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       if (typeof window === 'undefined' || !window.ethereum) return;
 
       try {
-        const accounts = await window.ethereum.request({
+        const accounts = (await window.ethereum.request({
           method: 'eth_accounts',
-        });
+        })) as string[];
         if (accounts.length > 0) {
           await handleConnect();
         }
@@ -72,18 +71,17 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       }
     };
 
-    const handleChainChanged = async (chainId: string) => {
-      const newChainId = parseInt(chainId, 16);
+    const handleChainChanged = async () => {
       if (walletState.isConnected) {
         await handleConnect();
       }
     };
 
-    window.ethereum.on('accountsChanged', handleAccountsChanged);
-    window.ethereum.on('chainChanged', handleChainChanged);
+    window.ethereum?.on('accountsChanged', handleAccountsChanged);
+    window.ethereum?.on('chainChanged', handleChainChanged);
 
     return () => {
-      if (window.ethereum.removeListener) {
+      if (window.ethereum?.removeListener) {
         window.ethereum.removeListener(
           'accountsChanged',
           handleAccountsChanged
@@ -100,8 +98,10 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     try {
       const newWalletState = await connectWallet();
       setWalletState(newWalletState);
-    } catch (error: any) {
-      setError(error.message || 'Failed to connect wallet');
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to connect wallet';
+      setError(errorMessage);
       console.error('Wallet connection error:', error);
     } finally {
       setIsLoading(false);
@@ -120,8 +120,10 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     try {
       await switchNetwork(chainId);
       // The chainChanged event will trigger a reconnection
-    } catch (error: any) {
-      setError(error.message || 'Failed to switch network');
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to switch network';
+      setError(errorMessage);
       console.error('Network switch error:', error);
     } finally {
       setIsLoading(false);

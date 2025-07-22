@@ -3,6 +3,15 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+.next/
+.nuxt/
+dist/
+build/
+out/
 
 # Hardhat
 cache/
@@ -24,7 +33,7 @@ coverage.json
 # Gas reports
 gas-report.txt
 
-# Deployment info
+# Deployment info (contains sensitive addresses)
 deployment-info.json
 
 # IDE
@@ -32,10 +41,13 @@ deployment-info.json
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
 # Logs
 logs
@@ -59,18 +71,9 @@ pids
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache (https://parceljs.org/)
+# Parcel cache
 .cache
 .parcel-cache
-
-# next.js build output
-.next
-
-# nuxt.js build output
-.nuxt
-
-# vuepress build output
-.vuepress/dist
 
 # Serverless directories
 .serverless
@@ -82,4 +85,16 @@ pids
 .dynamodb/
 
 # TernJS port file
-.tern-port 
+.tern-port
+
+# Temporary files
+*.tmp
+*.temp
+
+# Lock files (keep only package-lock.json)
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+
+# TypeScript
+*.tsbuildinfo 

@@ -93,6 +93,113 @@ export interface ApprovalProcessedEvent {
   approver: string;
 }
 
+// Contract Interface Types
+export interface FinancialPlatformContract {
+  // Event listeners
+  on(
+    event: 'TransactionCreated',
+    listener: (
+      transactionId: bigint,
+      from: string,
+      to: string,
+      amount: bigint
+    ) => void
+  ): this;
+  on(
+    event: 'TransactionStatusUpdated',
+    listener: (transactionId: bigint, status: number) => void
+  ): this;
+  on(
+    event: 'ApprovalRequested',
+    listener: (
+      approvalId: bigint,
+      transactionId: bigint,
+      requester: string
+    ) => void
+  ): this;
+  on(
+    event: 'ApprovalProcessed',
+    listener: (approvalId: bigint, status: number, approver: string) => void
+  ): this;
+  on(
+    event: 'UserRegistered',
+    listener: (
+      userId: bigint,
+      walletAddress: string,
+      name: string,
+      role: number
+    ) => void
+  ): this;
+
+  // Event removal
+  off(
+    event: 'TransactionCreated',
+    listener: (
+      transactionId: bigint,
+      from: string,
+      to: string,
+      amount: bigint
+    ) => void
+  ): this;
+  off(
+    event: 'TransactionStatusUpdated',
+    listener: (transactionId: bigint, status: number) => void
+  ): this;
+  off(
+    event: 'ApprovalRequested',
+    listener: (
+      approvalId: bigint,
+      transactionId: bigint,
+      requester: string
+    ) => void
+  ): this;
+  off(
+    event: 'ApprovalProcessed',
+    listener: (approvalId: bigint, status: number, approver: string) => void
+  ): this;
+  off(
+    event: 'UserRegistered',
+    listener: (
+      userId: bigint,
+      walletAddress: string,
+      name: string,
+      role: number
+    ) => void
+  ): this;
+
+  // Generic event handling
+  on(event: string, listener: (...args: unknown[]) => void): this;
+  off(event: string, listener: (...args: unknown[]) => void): this;
+}
+
+// Event Handler Types
+export type TransactionCreatedHandler = (
+  transactionId: bigint,
+  from: string,
+  to: string,
+  amount: bigint
+) => void;
+export type TransactionStatusUpdatedHandler = (
+  transactionId: bigint,
+  status: number
+) => void;
+export type ApprovalRequestedHandler = (
+  approvalId: bigint,
+  transactionId: bigint,
+  requester: string
+) => void;
+export type ApprovalProcessedHandler = (
+  approvalId: bigint,
+  status: number,
+  approver: string
+) => void;
+export type UserRegisteredHandler = (
+  userId: bigint,
+  walletAddress: string,
+  name: string,
+  role: number
+) => void;
+
 // UI Types
 export interface DashboardMetrics {
   totalTransactions: number;

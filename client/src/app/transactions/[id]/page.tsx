@@ -130,8 +130,8 @@ export default function TransactionDetailsPage() {
               Transaction Not Found
             </CardTitle>
             <CardDescription>
-              The requested transaction could not be found or you don't have
-              permission to view it
+              The requested transaction could not be found or you don&apos;t
+              have permission to view it
             </CardDescription>
           </CardHeader>
         </Card>
@@ -159,7 +159,7 @@ export default function TransactionDetailsPage() {
               Access Denied
             </CardTitle>
             <CardDescription>
-              You don't have permission to view this transaction
+              You don&apos;t have permission to view this transaction
             </CardDescription>
           </CardHeader>
         </Card>

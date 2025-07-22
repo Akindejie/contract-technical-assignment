@@ -25,7 +25,6 @@ import {
   Users,
   ArrowLeftRight,
   CheckSquare,
-  Clock,
   TrendingUp,
   Activity,
 } from 'lucide-react';
@@ -37,7 +36,7 @@ const MetricCard: React.FC<{
   icon: React.ComponentType<{ className?: string }>;
   trend?: 'up' | 'down' | 'neutral';
   index?: number;
-}> = ({ title, value, description, icon: Icon, trend, index = 0 }) => (
+}> = ({ title, value, description, icon: Icon, index = 0 }) => (
   <Card
     className="animate-in slide-in-from-bottom duration-500 hover:shadow-md transition-shadow"
     style={{ animationDelay: `${index * 100}ms` }}

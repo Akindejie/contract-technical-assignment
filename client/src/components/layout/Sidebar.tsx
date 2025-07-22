@@ -19,7 +19,6 @@ import {
   X,
   Wallet,
   LogOut,
-  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -42,7 +41,7 @@ interface NavItem {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
   const { isConnected, address, disconnect } = useWallet();

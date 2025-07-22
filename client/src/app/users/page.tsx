@@ -8,7 +8,7 @@ import {
   useUpdateUserRole,
 } from '@/lib/hooks/useContract';
 import { UserRole } from '@/types/contracts';
-import { formatAddress } from '@/lib/web3/provider';
+
 import {
   Card,
   CardContent,
@@ -36,7 +36,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { LoadingPage } from '@/components/ui/loading-spinner';
+
 import {
   Users,
   Plus,
@@ -60,7 +60,7 @@ const registerUserSchema = z.object({
     .min(1, 'Name is required')
     .max(100, 'Name must be less than 100 characters'),
   email: z.string().min(1, 'Email is required').email('Invalid email format'),
-  role: z.enum(['0', '1', '2'], { required_error: 'Role is required' }),
+  role: z.enum(['0', '1', '2']),
 });
 
 type RegisterUserFormData = z.infer<typeof registerUserSchema>;
@@ -298,7 +298,7 @@ const UpdateUserRoleForm: React.FC<{
     try {
       await updateUserRoleMutation.mutateAsync({ walletAddress, role });
       onSuccess?.();
-    } catch (error) {
+    } catch {
       // error handled by hook
     }
   };

@@ -12,9 +12,7 @@ export const registerUserSchema = z.object({
     .min(2, 'Name must be at least 2 characters')
     .max(50, 'Name must be less than 50 characters'),
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
-  role: z.nativeEnum(UserRole, {
-    errorMap: () => ({ message: 'Please select a valid role' }),
-  }),
+  role: z.nativeEnum(UserRole),
 });
 
 export type RegisterUserFormData = z.infer<typeof registerUserSchema>;
@@ -57,9 +55,7 @@ export const updateUserRoleSchema = z.object({
     .string()
     .min(1, 'User address is required')
     .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address'),
-  newRole: z.nativeEnum(UserRole, {
-    errorMap: () => ({ message: 'Please select a valid role' }),
-  }),
+  newRole: z.nativeEnum(UserRole),
 });
 
 export type UpdateUserRoleFormData = z.infer<typeof updateUserRoleSchema>;

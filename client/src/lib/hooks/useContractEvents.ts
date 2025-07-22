@@ -4,6 +4,13 @@ import { getContract } from '@/lib/web3/provider';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from './useContract';
+import {
+  TransactionCreatedHandler,
+  TransactionStatusUpdatedHandler,
+  ApprovalRequestedHandler,
+  ApprovalProcessedHandler,
+  UserRegisteredHandler,
+} from '@/types/contracts';
 
 export const useContractEvents = () => {
   const { provider, chainId, address } = useWallet();
@@ -12,7 +19,7 @@ export const useContractEvents = () => {
   useEffect(() => {
     if (!provider || !chainId || !address) return;
 
-    let contract: any;
+    let contract: ReturnType<typeof getContract>;
 
     try {
       contract = getContract('financialPlatform', chainId, provider);
@@ -22,12 +29,11 @@ export const useContractEvents = () => {
     }
 
     // Transaction Created Event
-    const handleTransactionCreated = (
+    const handleTransactionCreated: TransactionCreatedHandler = (
       transactionId: bigint,
       from: string,
       to: string,
-      amount: bigint,
-      event: any
+      amount: bigint
     ) => {
       console.log('🔔 TransactionCreated event:', {
         transactionId,
@@ -53,10 +59,9 @@ export const useContractEvents = () => {
     };
 
     // Transaction Status Updated Event
-    const handleTransactionStatusUpdated = (
+    const handleTransactionStatusUpdated: TransactionStatusUpdatedHandler = (
       transactionId: bigint,
-      status: number,
-      event: any
+      status: number
     ) => {
       console.log('🔔 TransactionStatusUpdated event:', {
         transactionId,
@@ -82,11 +87,10 @@ export const useContractEvents = () => {
     };
 
     // Approval Requested Event
-    const handleApprovalRequested = (
+    const handleApprovalRequested: ApprovalRequestedHandler = (
       approvalId: bigint,
       transactionId: bigint,
-      requester: string,
-      event: any
+      requester: string
     ) => {
       console.log('🔔 ApprovalRequested event:', {
         approvalId,
@@ -110,11 +114,10 @@ export const useContractEvents = () => {
     };
 
     // Approval Processed Event
-    const handleApprovalProcessed = (
+    const handleApprovalProcessed: ApprovalProcessedHandler = (
       approvalId: bigint,
       status: number,
-      approver: string,
-      event: any
+      approver: string
     ) => {
       console.log('🔔 ApprovalProcessed event:', {
         approvalId,
@@ -146,12 +149,11 @@ export const useContractEvents = () => {
     };
 
     // User Registered Event
-    const handleUserRegistered = (
+    const handleUserRegistered: UserRegisteredHandler = (
       userId: bigint,
       walletAddress: string,
       name: string,
-      role: number,
-      event: any
+      role: number
     ) => {
       console.log('🔔 UserRegistered event:', {
         userId,

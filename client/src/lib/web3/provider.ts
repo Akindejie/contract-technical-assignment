@@ -1,4 +1,10 @@
-import { ethers, BrowserProvider, JsonRpcSigner, Contract } from 'ethers';
+import {
+  ethers,
+  BrowserProvider,
+  JsonRpcSigner,
+  Contract,
+  JsonRpcApiProvider,
+} from 'ethers';
 import { NETWORKS, SUPPORTED_CHAIN_IDS } from '@/constants/networks';
 import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { FINANCIAL_PLATFORM_ABI, MOCK_TOKEN_ABI } from '@/constants/abis';
@@ -23,6 +29,10 @@ export const isMetaMaskInstalled = (): boolean => {
 export const getProvider = async (): Promise<BrowserProvider | null> => {
   if (!isMetaMaskInstalled()) {
     throw new Error('MetaMask is not installed');
+  }
+
+  if (!window.ethereum) {
+    throw new Error('window.ethereum is not available');
   }
 
   try {
@@ -52,6 +62,10 @@ export const getSigner = async (): Promise<JsonRpcSigner | null> => {
 export const connectWallet = async (): Promise<WalletState> => {
   if (!isMetaMaskInstalled()) {
     throw new Error('MetaMask is not installed');
+  }
+
+  if (!window.ethereum) {
+    throw new Error('window.ethereum is not available');
   }
 
   try {
@@ -98,22 +112,27 @@ export const switchNetwork = async (chainId: number): Promise<void> => {
     throw new Error('MetaMask is not installed');
   }
 
-  const hexChainId = `0x${chainId.toString(16)}`;
+  if (!window.ethereum) {
+    throw new Error('window.ethereum is not available');
+  }
+
+  const hexChainId = '0x' + chainId.toString(16);
 
   try {
     await window.ethereum.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: hexChainId }],
     });
-  } catch (switchError: any) {
+  } catch (switchError: unknown) {
     // This error code indicates that the chain has not been added to MetaMask
-    if (switchError.code === 4902) {
+    if (switchError && typeof switchError === 'object' && 'code' in switchError && switchError.code === 4902) {
       const network = Object.values(NETWORKS).find(
         (n) => n.chainId === chainId
       );
       if (!network) throw new Error('Network not supported');
 
       try {
+        if (!window.ethereum) throw new Error('window.ethereum is not available');
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
           params: [
@@ -170,9 +189,23 @@ export const getContract = (
 };
 
 // Format error messages
-export const formatError = (error: any): string => {
-  if (error?.reason) return error.reason;
-  if (error?.message) return error.message;
+export const formatError = (error: unknown): string => {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'reason' in error &&
+    typeof error.reason === 'string'
+  ) {
+    return error.reason;
+  }
+  if (
+    error &&
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
+    return error.message;
+  }
   if (typeof error === 'string') return error;
   return 'An unknown error occurred';
 };
@@ -202,7 +235,7 @@ export const parseTokenAmount = (
 // Wait for transaction confirmation
 export const waitForTransaction = async (
   txHash: string,
-  provider: BrowserProvider,
+  provider: BrowserProvider | JsonRpcApiProvider,
   confirmations: number = 1
 ): Promise<ethers.TransactionReceipt | null> => {
   try {

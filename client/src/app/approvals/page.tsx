@@ -9,7 +9,7 @@ import {
   useTransaction,
   useProcessApproval,
 } from '@/lib/hooks/useContract';
-import { ApprovalStatus, UserRole, TransactionStatus } from '@/types/contracts';
+import { UserRole, Approval, Transaction } from '@/types/contracts';
 import { formatTokenAmount, formatAddress } from '@/lib/web3/provider';
 import {
   Card,
@@ -28,7 +28,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Table,
@@ -52,8 +51,8 @@ import {
 } from 'lucide-react';
 
 interface ApprovalActionDialogProps {
-  approval: any;
-  transaction: any;
+  approval: Approval;
+  transaction: Transaction;
   onClose: () => void;
 }
 
@@ -210,7 +209,9 @@ export default function ApprovalsPage() {
   const { isConnected, address } = useWallet();
   const { data: user, isLoading: userLoading } = useUser(address || '');
   const { data: pendingApprovals = [], isLoading } = usePendingApprovals();
-  const [selectedApproval, setSelectedApproval] = useState<any>(null);
+  const [selectedApproval, setSelectedApproval] = useState<
+    (Approval & { transaction: Transaction }) | null
+  >(null);
   const queryClient = useQueryClient();
 
   // Invalidate all queries when wallet address changes
@@ -411,8 +412,8 @@ export default function ApprovalsPage() {
 
 // Separate component for approval rows to handle transaction data loading
 const ApprovalRow: React.FC<{
-  approval: any;
-  onSelect: (approval: any) => void;
+  approval: Approval;
+  onSelect: (approval: Approval & { transaction: Transaction }) => void;
   index: number;
 }> = ({ approval, onSelect, index }) => {
   const { data: transaction } = useTransaction(Number(approval.transactionId));

@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Transaction, TransactionStatus } from '@/types/contracts';
+import { Transaction } from '@/types/contracts';
 import { formatTokenAmount } from '@/lib/web3/provider';
 import { TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
 
@@ -139,7 +139,7 @@ export const TransactionChart: React.FC<TransactionChartProps> = ({
           </div>
 
           <div className="space-y-2">
-            {chartData.map((data, index) => (
+            {chartData.map((data) => (
               <div key={data.date} className="space-y-1">
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-medium">{data.date}</span>

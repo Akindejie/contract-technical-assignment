@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useWallet } from '@/lib/hooks/useWallet';
 import { useUserTransactions } from '@/lib/hooks/useContract';
-import { TransactionStatus, UserRole } from '@/types/contracts';
+import { TransactionStatus, Transaction } from '@/types/contracts';
 import { formatTokenAmount, formatAddress } from '@/lib/web3/provider';
 import {
   Card,
@@ -155,7 +155,7 @@ export default function TransactionsPage() {
     transactions,
     title,
   }: {
-    transactions: any[];
+    transactions: Transaction[];
     title: string;
   }) => (
     <Card className="animate-in slide-in-from-bottom-4 duration-500">
