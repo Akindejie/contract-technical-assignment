@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useWallet } from '@/lib/hooks/useWallet';
 import {
   usePendingApprovals,
@@ -38,6 +39,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
+import { LoadingPage } from '@/components/ui/loading-spinner';
 import {
   CheckSquare,
   Clock,
@@ -206,9 +208,17 @@ const ApprovalActionDialog: React.FC<ApprovalActionDialogProps> = ({
 
 export default function ApprovalsPage() {
   const { isConnected, address } = useWallet();
-  const { data: user } = useUser(address || '');
+  const { data: user, isLoading: userLoading } = useUser(address || '');
   const { data: pendingApprovals = [], isLoading } = usePendingApprovals();
   const [selectedApproval, setSelectedApproval] = useState<any>(null);
+  const queryClient = useQueryClient();
+
+  // Invalidate all queries when wallet address changes
+  useEffect(() => {
+    if (address) {
+      queryClient.invalidateQueries();
+    }
+  }, [address, queryClient]);
 
   // Check if user has approval permissions
   const canApprove =
@@ -216,8 +226,8 @@ export default function ApprovalsPage() {
 
   if (!isConnected) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <Card className="w-full max-w-md">
+      <div className="flex items-center justify-center h-[60vh] animate-in fade-in duration-500">
+        <Card className="w-full max-w-md animate-in slide-in-from-bottom-4 duration-500">
           <CardHeader className="text-center">
             <CardTitle>Connect Your Wallet</CardTitle>
             <CardDescription>
@@ -229,10 +239,14 @@ export default function ApprovalsPage() {
     );
   }
 
+  if (userLoading) {
+    return <LoadingPage message="Loading user data..." />;
+  }
+
   if (!canApprove) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <Card className="w-full max-w-md">
+      <div className="flex items-center justify-center h-[60vh] animate-in fade-in duration-500">
+        <Card className="w-full max-w-md animate-in slide-in-from-bottom-4 duration-500">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center">
               <AlertTriangle className="w-5 h-5 mr-2 text-yellow-500" />
@@ -248,31 +262,34 @@ export default function ApprovalsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading approvals...</p>
-        </div>
-      </div>
-    );
+    return <LoadingPage message="Loading approvals..." />;
   }
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex items-center justify-between space-y-2 animate-in slide-in-from-top-4 duration-500">
         <h2 className="text-3xl font-bold tracking-tight">
           Approval Dashboard
         </h2>
-        <Badge variant="outline" className="flex items-center">
+        <Badge
+          variant="outline"
+          className="flex items-center animate-in slide-in-from-right-4 duration-500"
+          style={{ animationDelay: '200ms' }}
+        >
           <User className="w-4 h-4 mr-1" />
           {UserRole[user?.role || UserRole.Regular]}
         </Badge>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div
+        className="grid gap-4 md:grid-cols-3 animate-in slide-in-from-bottom-4 duration-500"
+        style={{ animationDelay: '100ms' }}
+      >
+        <Card
+          className="animate-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '150ms' }}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Pending Approvals
@@ -287,7 +304,10 @@ export default function ApprovalsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="animate-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '200ms' }}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Your Role</CardTitle>
             <CheckSquare className="h-4 w-4 text-muted-foreground" />
@@ -302,7 +322,10 @@ export default function ApprovalsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="animate-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '250ms' }}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
             <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
@@ -319,7 +342,10 @@ export default function ApprovalsPage() {
       </div>
 
       {/* Pending Approvals Table */}
-      <Card>
+      <Card
+        className="animate-in slide-in-from-bottom-4 duration-500"
+        style={{ animationDelay: '300ms' }}
+      >
         <CardHeader>
           <CardTitle className="flex items-center">
             <CheckSquare className="w-5 h-5 mr-2" />
@@ -331,7 +357,7 @@ export default function ApprovalsPage() {
         </CardHeader>
         <CardContent>
           {pendingApprovals.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center py-12 animate-in fade-in duration-500">
               <CheckCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">No Pending Approvals</h3>
               <p className="text-muted-foreground">
@@ -352,11 +378,12 @@ export default function ApprovalsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pendingApprovals.map((approval) => (
+                {pendingApprovals.map((approval, index) => (
                   <ApprovalRow
                     key={approval.id.toString()}
                     approval={approval}
                     onSelect={setSelectedApproval}
+                    index={index}
                   />
                 ))}
               </TableBody>
@@ -386,12 +413,16 @@ export default function ApprovalsPage() {
 const ApprovalRow: React.FC<{
   approval: any;
   onSelect: (approval: any) => void;
-}> = ({ approval, onSelect }) => {
+  index: number;
+}> = ({ approval, onSelect, index }) => {
   const { data: transaction } = useTransaction(Number(approval.transactionId));
 
   if (!transaction) {
     return (
-      <TableRow>
+      <TableRow
+        className="animate-in slide-in-from-left-4 duration-300"
+        style={{ animationDelay: `${index * 50}ms` }}
+      >
         <TableCell colSpan={6}>
           <div className="flex items-center justify-center py-4">
             <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -403,7 +434,10 @@ const ApprovalRow: React.FC<{
   }
 
   return (
-    <TableRow>
+    <TableRow
+      className="animate-in slide-in-from-left-4 duration-300"
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
       <TableCell className="font-medium">#{approval.id.toString()}</TableCell>
       <TableCell>
         <div className="font-mono text-sm">

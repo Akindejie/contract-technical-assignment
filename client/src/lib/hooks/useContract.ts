@@ -38,6 +38,11 @@ export const useUser = (address?: string) => {
   return useQuery({
     queryKey: [QUERY_KEYS.USER, userAddress, chainId],
     queryFn: async (): Promise<User | null> => {
+      console.log('👤 Fetching user data...', {
+        provider: !!provider,
+        chainId,
+        userAddress,
+      });
       if (!provider || !chainId || !userAddress) return null;
 
       try {
@@ -49,7 +54,7 @@ export const useUser = (address?: string) => {
           walletAddress: userData.walletAddress,
           name: userData.name,
           email: userData.email,
-          role: userData.role,
+          role: Number(userData.role), // Convert BigInt to number for enum comparison
           isActive: userData.isActive,
           createdAt: userData.createdAt,
         };
@@ -95,6 +100,38 @@ export const useRegisterUser = () => {
         queryKey: [QUERY_KEYS.DASHBOARD_METRICS],
       });
       toast.success('User registered successfully');
+    },
+    onError: (error) => {
+      toast.error(formatError(error));
+    },
+  });
+};
+
+// Update User Role
+export const useUpdateUserRole = () => {
+  const { signer, chainId } = useWallet();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      walletAddress,
+      role,
+    }: {
+      walletAddress: string;
+      role: UserRole;
+    }) => {
+      if (!signer || !chainId) throw new Error('Wallet not connected');
+      const contract = getContract('financialPlatform', chainId, signer);
+      const tx = await contract.updateUserRole(walletAddress, role, {
+        gasLimit: GAS_LIMITS.UPDATE_USER_ROLE || 200_000,
+      });
+      await waitForTransaction(tx.hash, signer.provider);
+      return tx;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USERS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USER] });
+      toast.success('User role updated successfully');
     },
     onError: (error) => {
       toast.error(formatError(error));
@@ -215,6 +252,37 @@ export const useCreateTransaction = () => {
   });
 };
 
+// Complete Transaction
+export const useCompleteTransaction = () => {
+  const { signer, chainId } = useWallet();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (transactionId: number) => {
+      if (!signer || !chainId) throw new Error('Wallet not connected');
+      const contract = getContract('financialPlatform', chainId, signer);
+      const tx = await contract.completeTransaction(transactionId, {
+        gasLimit: GAS_LIMITS.COMPLETE_TRANSACTION || 200_000,
+      });
+      await waitForTransaction(tx.hash, signer.provider);
+      return tx;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTIONS] });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.USER_TRANSACTIONS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DASHBOARD_METRICS],
+      });
+      toast.success('Transaction completed successfully');
+    },
+    onError: (error) => {
+      toast.error(formatError(error));
+    },
+  });
+};
+
 // Approval Management Hooks
 export const usePendingApprovals = () => {
   const { provider, chainId } = useWallet();
@@ -222,6 +290,10 @@ export const usePendingApprovals = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.PENDING_APPROVALS, chainId],
     queryFn: async (): Promise<Approval[]> => {
+      console.log('🔍 Fetching pending approvals...', {
+        provider: !!provider,
+        chainId,
+      });
       if (!provider || !chainId) return [];
 
       try {
@@ -288,6 +360,40 @@ export const useProcessApproval = () => {
         queryKey: [QUERY_KEYS.DASHBOARD_METRICS],
       });
       toast.success('Approval processed successfully');
+    },
+    onError: (error) => {
+      toast.error(formatError(error));
+    },
+  });
+};
+
+// Request Approval
+export const useRequestApproval = () => {
+  const { signer, chainId } = useWallet();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      transactionId,
+      reason,
+    }: {
+      transactionId: number;
+      reason: string;
+    }) => {
+      if (!signer || !chainId) throw new Error('Wallet not connected');
+      const contract = getContract('financialPlatform', chainId, signer);
+      const tx = await contract.requestApproval(transactionId, reason, {
+        gasLimit: GAS_LIMITS.REQUEST_APPROVAL || 200_000,
+      });
+      await waitForTransaction(tx.hash, signer.provider);
+      return tx;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.PENDING_APPROVALS],
+      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTIONS] });
+      toast.success('Approval requested successfully');
     },
     onError: (error) => {
       toast.error(formatError(error));

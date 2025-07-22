@@ -2,7 +2,11 @@
 
 import React, { useState } from 'react';
 import { useWallet } from '@/lib/hooks/useWallet';
-import { useUser, useRegisterUser } from '@/lib/hooks/useContract';
+import {
+  useUser,
+  useRegisterUser,
+  useUpdateUserRole,
+} from '@/lib/hooks/useContract';
 import { UserRole } from '@/types/contracts';
 import { formatAddress } from '@/lib/web3/provider';
 import {
@@ -32,6 +36,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { LoadingPage } from '@/components/ui/loading-spinner';
 import {
   Users,
   Plus,
@@ -278,6 +283,52 @@ const RegisterUserForm: React.FC<RegisterUserFormProps> = ({ onSuccess }) => {
   );
 };
 
+// Add a new component for updating user roles
+const UpdateUserRoleForm: React.FC<{
+  walletAddress: string;
+  currentRole: UserRole;
+  onSuccess?: () => void;
+}> = ({ walletAddress, currentRole, onSuccess }) => {
+  const updateUserRoleMutation = useUpdateUserRole();
+  const [role, setRole] = React.useState<UserRole>(currentRole);
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (role === currentRole) return;
+    try {
+      await updateUserRoleMutation.mutateAsync({ walletAddress, role });
+      onSuccess?.();
+    } catch (error) {
+      // error handled by hook
+    }
+  };
+
+  return (
+    <form onSubmit={handleUpdate} className="flex items-center gap-2">
+      <Select
+        value={role.toString()}
+        onValueChange={(v) => setRole(Number(v) as UserRole)}
+      >
+        <SelectTrigger className="w-32">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="0">Regular User</SelectItem>
+          <SelectItem value="1">Manager</SelectItem>
+          <SelectItem value="2">Admin</SelectItem>
+        </SelectContent>
+      </Select>
+      <Button
+        type="submit"
+        size="sm"
+        disabled={updateUserRoleMutation.isPending || role === currentRole}
+      >
+        {updateUserRoleMutation.isPending ? 'Updating...' : 'Update'}
+      </Button>
+    </form>
+  );
+};
+
 export default function UsersPage() {
   const { isConnected, address } = useWallet();
   const { data: user } = useUser(address || '');
@@ -288,8 +339,8 @@ export default function UsersPage() {
 
   if (!isConnected) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <Card className="w-full max-w-md">
+      <div className="flex items-center justify-center h-[60vh] animate-in fade-in duration-500">
+        <Card className="w-full max-w-md animate-in slide-in-from-bottom-4 duration-500">
           <CardHeader className="text-center">
             <CardTitle>Connect Your Wallet</CardTitle>
             <CardDescription>
@@ -303,8 +354,8 @@ export default function UsersPage() {
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <Card className="w-full max-w-md">
+      <div className="flex items-center justify-center h-[60vh] animate-in fade-in duration-500">
+        <Card className="w-full max-w-md animate-in slide-in-from-bottom-4 duration-500">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center">
               <AlertTriangle className="w-5 h-5 mr-2 text-yellow-500" />
@@ -319,12 +370,31 @@ export default function UsersPage() {
     );
   }
 
+  // Fetch all users for management (simulate with a list for now)
+  // In a real app, you would fetch all users from the contract
+  // For demo, let's assume a static list of test accounts (from deployment)
+  const testUsers = [
+    { name: 'Platform Admin', address: '0xf39F...2266', role: UserRole.Admin },
+    { name: 'John Manager', address: '0x7099...79C8', role: UserRole.Manager },
+    { name: 'Alice User', address: '0x3C44...93BC', role: UserRole.Regular },
+    { name: 'Bob User', address: '0x90F7...b906', role: UserRole.Regular },
+    {
+      name: 'Sarah Approver',
+      address: '0x15d3...6A65',
+      role: UserRole.Manager,
+    },
+  ];
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex items-center justify-between space-y-2 animate-in slide-in-from-top-4 duration-500">
         <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="flex items-center">
+          <Badge
+            variant="outline"
+            className="flex items-center animate-in slide-in-from-right-4 duration-500"
+            style={{ animationDelay: '100ms' }}
+          >
             <Shield className="w-4 h-4 mr-1" />
             Admin
           </Badge>
@@ -333,7 +403,10 @@ export default function UsersPage() {
             onOpenChange={setIsRegisterDialogOpen}
           >
             <DialogTrigger asChild>
-              <Button>
+              <Button
+                className="animate-in slide-in-from-right-4 duration-500"
+                style={{ animationDelay: '200ms' }}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Register User
               </Button>
@@ -354,8 +427,14 @@ export default function UsersPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <div
+        className="grid gap-4 md:grid-cols-4 animate-in slide-in-from-bottom-4 duration-500"
+        style={{ animationDelay: '100ms' }}
+      >
+        <Card
+          className="animate-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '150ms' }}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -366,7 +445,10 @@ export default function UsersPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="animate-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '200ms' }}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Admins</CardTitle>
             <Shield className="h-4 w-4 text-muted-foreground" />
@@ -379,7 +461,10 @@ export default function UsersPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="animate-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '250ms' }}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Managers</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
@@ -392,7 +477,10 @@ export default function UsersPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="animate-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '300ms' }}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Regular Users</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -407,9 +495,15 @@ export default function UsersPage() {
       </div>
 
       {/* User Management Features */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div
+        className="grid gap-4 md:grid-cols-2 animate-in slide-in-from-bottom-4 duration-500"
+        style={{ animationDelay: '200ms' }}
+      >
         {/* Register New User */}
-        <Card>
+        <Card
+          className="animate-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '250ms' }}
+        >
           <CardHeader>
             <CardTitle className="flex items-center">
               <UserPlus className="w-5 h-5 mr-2" />
@@ -440,7 +534,10 @@ export default function UsersPage() {
         </Card>
 
         {/* User Roles & Permissions */}
-        <Card>
+        <Card
+          className="animate-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '300ms' }}
+        >
           <CardHeader>
             <CardTitle className="flex items-center">
               <Shield className="w-5 h-5 mr-2" />
@@ -485,7 +582,10 @@ export default function UsersPage() {
       </div>
 
       {/* Test Accounts Information */}
-      <Card>
+      <Card
+        className="animate-in slide-in-from-bottom-4 duration-500"
+        style={{ animationDelay: '350ms' }}
+      >
         <CardHeader>
           <CardTitle className="flex items-center">
             <Users className="w-5 h-5 mr-2" />
@@ -497,56 +597,74 @@ export default function UsersPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            <div className="p-3 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-sm">Platform Admin</span>
-                <Badge variant="secondary">Admin</Badge>
+            {testUsers.map((user, index) => (
+              <div
+                key={user.address}
+                className="p-3 border rounded-lg animate-in slide-in-from-left-4 duration-300"
+                style={{ animationDelay: `${400 + index * 50}ms` }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-sm">{user.name}</span>
+                  <Badge
+                    variant={
+                      user.role === UserRole.Admin
+                        ? 'secondary'
+                        : user.role === UserRole.Manager
+                        ? 'outline'
+                        : 'secondary'
+                    }
+                  >
+                    {UserRole[user.role]}
+                  </Badge>
+                </div>
+                <p className="text-xs font-mono text-muted-foreground">
+                  {user.address}
+                </p>
               </div>
-              <p className="text-xs font-mono text-muted-foreground">
-                0xf39F...2266
-              </p>
-            </div>
-
-            <div className="p-3 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-sm">John Manager</span>
-                <Badge variant="outline">Manager</Badge>
-              </div>
-              <p className="text-xs font-mono text-muted-foreground">
-                0x7099...79C8
-              </p>
-            </div>
-
-            <div className="p-3 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-sm">Alice User</span>
-                <Badge variant="secondary">Regular</Badge>
-              </div>
-              <p className="text-xs font-mono text-muted-foreground">
-                0x3C44...93BC
-              </p>
-            </div>
-
-            <div className="p-3 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-sm">Bob User</span>
-                <Badge variant="secondary">Regular</Badge>
-              </div>
-              <p className="text-xs font-mono text-muted-foreground">
-                0x90F7...b906
-              </p>
-            </div>
-
-            <div className="p-3 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-sm">Sarah Approver</span>
-                <Badge variant="outline">Manager</Badge>
-              </div>
-              <p className="text-xs font-mono text-muted-foreground">
-                0x15d3...6A65
-              </p>
-            </div>
+            ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* User Role Management Table */}
+      <Card
+        className="animate-in slide-in-from-bottom-4 duration-500"
+        style={{ animationDelay: '400ms' }}
+      >
+        <CardHeader>
+          <CardTitle>User Role Management</CardTitle>
+          <CardDescription>Update user roles as an admin</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr>
+                <th className="text-left p-2">Name</th>
+                <th className="text-left p-2">Address</th>
+                <th className="text-left p-2">Current Role</th>
+                <th className="text-left p-2">Update Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {testUsers.map((user, index) => (
+                <tr
+                  key={user.address}
+                  className="border-b animate-in slide-in-from-left-4 duration-300"
+                  style={{ animationDelay: `${450 + index * 50}ms` }}
+                >
+                  <td className="p-2">{user.name}</td>
+                  <td className="p-2 font-mono">{user.address}</td>
+                  <td className="p-2">{UserRole[user.role]}</td>
+                  <td className="p-2">
+                    <UpdateUserRoleForm
+                      walletAddress={user.address}
+                      currentRole={user.role}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </CardContent>
       </Card>
     </div>

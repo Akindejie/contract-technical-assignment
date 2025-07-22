@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import { useWallet } from '@/lib/hooks/useWallet';
 import { useUserTransactions } from '@/lib/hooks/useContract';
 import { TransactionStatus, UserRole } from '@/types/contracts';
@@ -39,6 +41,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { LoadingPage } from '@/components/ui/loading-spinner';
 import {
   ArrowLeftRight,
   Plus,
@@ -98,6 +101,14 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Invalidate all queries when wallet address changes
+  useEffect(() => {
+    if (address) {
+      queryClient.invalidateQueries();
+    }
+  }, [address, queryClient]);
 
   // Filter transactions
   const filteredTransactions = transactions.filter((tx) => {
@@ -123,8 +134,8 @@ export default function TransactionsPage() {
 
   if (!isConnected) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <Card className="w-full max-w-md">
+      <div className="flex items-center justify-center h-[60vh] animate-in fade-in duration-500">
+        <Card className="w-full max-w-md animate-in slide-in-from-bottom-4 duration-500">
           <CardHeader className="text-center">
             <CardTitle>Connect Your Wallet</CardTitle>
             <CardDescription>
@@ -137,14 +148,7 @@ export default function TransactionsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading transactions...</p>
-        </div>
-      </div>
-    );
+    return <LoadingPage message="Loading transactions..." />;
   }
 
   const TransactionTable = ({
@@ -154,7 +158,7 @@ export default function TransactionsPage() {
     transactions: any[];
     title: string;
   }) => (
-    <Card>
+    <Card className="animate-in slide-in-from-bottom-4 duration-500">
       <CardHeader>
         <CardTitle className="flex items-center">
           <ArrowLeftRight className="w-5 h-5 mr-2" />
@@ -167,7 +171,7 @@ export default function TransactionsPage() {
       </CardHeader>
       <CardContent>
         {transactions.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-muted-foreground animate-in fade-in duration-500">
             No transactions found
           </div>
         ) : (
@@ -183,8 +187,12 @@ export default function TransactionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.map((tx) => (
-                <TableRow key={tx.id.toString()}>
+              {transactions.map((tx, index) => (
+                <TableRow
+                  key={tx.id.toString()}
+                  className="animate-in slide-in-from-left-4 duration-300"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       {getStatusIcon(tx.status)}
@@ -210,9 +218,11 @@ export default function TransactionsPage() {
                     {new Date(Number(tx.timestamp) * 1000).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="w-4 h-4" />
-                    </Button>
+                    <Link href={`/transactions/${tx.id}`}>
+                      <Button variant="ghost" size="sm">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </Link>
                   </TableCell>
                 </TableRow>
               ))}
@@ -225,11 +235,14 @@ export default function TransactionsPage() {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex items-center justify-between space-y-2 animate-in slide-in-from-top-4 duration-500">
         <h2 className="text-3xl font-bold tracking-tight">Transactions</h2>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button
+              className="animate-in slide-in-from-right-4 duration-500"
+              style={{ animationDelay: '200ms' }}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Create Transaction
             </Button>
@@ -249,7 +262,10 @@ export default function TransactionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div
+        className="flex flex-col sm:flex-row gap-4 animate-in slide-in-from-top-4 duration-500"
+        style={{ animationDelay: '100ms' }}
+      >
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -275,7 +291,11 @@ export default function TransactionsPage() {
       </div>
 
       {/* Transaction Tables */}
-      <Tabs defaultValue="all" className="space-y-4">
+      <Tabs
+        defaultValue="all"
+        className="space-y-4 animate-in slide-in-from-bottom-4 duration-500"
+        style={{ animationDelay: '200ms' }}
+      >
         <TabsList>
           <TabsTrigger value="all">
             All Transactions ({filteredTransactions.length})
