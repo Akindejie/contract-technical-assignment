@@ -50,6 +50,13 @@ export const FINANCIAL_PLATFORM_ABI = [
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
   },
+  {
+    type: 'function',
+    name: 'getAllRegisteredUsers',
+    inputs: [],
+    outputs: [{ name: '', type: 'address[]' }],
+    stateMutability: 'view',
+  },
 
   // Transaction Management
   {

@@ -6,10 +6,10 @@ export const CONTRACT_ADDRESSES: Record<number, ContractAddresses> = {
   31337: {
     financialPlatform:
       process.env.NEXT_PUBLIC_FINANCIAL_PLATFORM_ADDRESS_LOCALHOST ||
-      '0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1',
+      '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e',
     mockToken:
       process.env.NEXT_PUBLIC_MOCK_TOKEN_ADDRESS_LOCALHOST ||
-      '0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44',
+      '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0',
   },
   // Sepolia Testnet
   11155111: {
@@ -21,7 +21,7 @@ export const CONTRACT_ADDRESSES: Record<number, ContractAddresses> = {
 
 // Default gas limits for different operations
 export const GAS_LIMITS = {
-  REGISTER_USER: 200000,
+  REGISTER_USER: 500000,
   UPDATE_USER_ROLE: 100000,
   CREATE_TRANSACTION: 1000000,
   REQUEST_APPROVAL: 500000,

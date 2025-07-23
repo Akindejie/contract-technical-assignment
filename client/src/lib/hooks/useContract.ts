@@ -160,6 +160,45 @@ export const useUpdateUserRole = () => {
   });
 };
 
+/**
+ * Fetches all registered users from the smart contract (admin only).
+ */
+export const useAllUsers = () => {
+  const { provider, chainId } = useWallet();
+
+  return useQuery({
+    queryKey: ['allUsers', chainId],
+    queryFn: async () => {
+      if (!provider || !chainId) return [];
+
+      const contract = getContract('financialPlatform', chainId, provider);
+      const addresses: string[] = await contract.getAllRegisteredUsers();
+
+      // Fetch user details for each address, skipping any that fail
+      const users = [];
+      for (const addr of addresses) {
+        try {
+          const userData = await contract.getUser(addr);
+          users.push({
+            id: userData.id,
+            walletAddress: userData.walletAddress,
+            name: userData.name,
+            email: userData.email,
+            role: Number(userData.role),
+            isActive: userData.isActive,
+            createdAt: userData.createdAt,
+          });
+        } catch (e) {
+          // Skip this address if fetching user fails
+          console.warn('Skipping user address due to error:', addr, e);
+        }
+      }
+      return users;
+    },
+    enabled: !!provider && !!chainId,
+  });
+};
+
 // =========================
 // Transaction Management Hooks
 // =========================

@@ -6,6 +6,7 @@ import {
   useUser,
   useRegisterUser,
   useUpdateUserRole,
+  useAllUsers,
 } from '@/lib/hooks/useContract';
 import { UserRole } from '@/types/contracts';
 import { getAddress } from 'ethers';
@@ -342,35 +343,14 @@ const UpdateUserRoleForm: React.FC<{
 };
 
 export default function UsersPage() {
-  const [testUsers, setTestUsers] = useState([
-    {
-      name: 'Platform Admin',
-      address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-      role: UserRole.Admin,
-    },
-    {
-      name: 'John Manager',
-      address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-      role: UserRole.Manager,
-    },
-    {
-      name: 'Alice User',
-      address: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
-      role: UserRole.Regular,
-    },
-    {
-      name: 'Bob User',
-      address: '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
-      role: UserRole.Regular,
-    },
-    {
-      name: 'Sarah Approver',
-      address: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
-      role: UserRole.Manager,
-    },
-  ]);
   const { isConnected, address } = useWallet();
   const { data: user } = useUser(address || '');
+  const {
+    data: users = [],
+    isLoading: usersLoading,
+    error: usersError,
+    refetch,
+  } = useAllUsers();
   const [isRegisterDialogOpen, setIsRegisterDialogOpen] = useState(false);
 
   // Check if user has admin permissions
@@ -405,6 +385,21 @@ export default function UsersPage() {
             </CardDescription>
           </CardHeader>
         </Card>
+      </div>
+    );
+  }
+
+  if (usersLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        Loading users...
+      </div>
+    );
+  }
+  if (usersError) {
+    return (
+      <div className="flex items-center justify-center h-[60vh] text-red-500">
+        Failed to load users.
       </div>
     );
   }
@@ -464,7 +459,7 @@ export default function UsersPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
+            <div className="text-2xl font-bold">{users.length}</div>
             <p className="text-xs text-muted-foreground">Registered users</p>
           </CardContent>
         </Card>
@@ -478,7 +473,9 @@ export default function UsersPage() {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1</div>
+            <div className="text-2xl font-bold">
+              {users.filter((u) => u.role === UserRole.Admin).length}
+            </div>
             <p className="text-xs text-muted-foreground">
               System administrators
             </p>
@@ -494,7 +491,9 @@ export default function UsersPage() {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
+            <div className="text-2xl font-bold">
+              {users.filter((u) => u.role === UserRole.Manager).length}
+            </div>
             <p className="text-xs text-muted-foreground">
               Can approve transactions
             </p>
@@ -510,7 +509,9 @@ export default function UsersPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
+            <div className="text-2xl font-bold">
+              {users.filter((u) => u.role === UserRole.Regular).length}
+            </div>
             <p className="text-xs text-muted-foreground">
               Standard access level
             </p>
@@ -613,17 +614,17 @@ export default function UsersPage() {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Users className="w-5 h-5 mr-2" />
-            Test Accounts Available
+            Registered Accounts
           </CardTitle>
           <CardDescription>
-            Pre-configured accounts for testing (from deployment)
+            All users registered on the platform
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {testUsers.map((user, index) => (
+            {users.map((user, index) => (
               <div
-                key={user.address}
+                key={user.walletAddress}
                 className="p-3 border rounded-lg animate-in slide-in-from-left-4 duration-300"
                 style={{ animationDelay: `${400 + index * 50}ms` }}
               >
@@ -642,7 +643,7 @@ export default function UsersPage() {
                   </Badge>
                 </div>
                 <p className="text-xs font-mono text-muted-foreground">
-                  {user.address}
+                  {user.walletAddress}
                 </p>
               </div>
             ))}
@@ -670,28 +671,20 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody>
-              {testUsers.map((user, index) => (
+              {users.map((user, index) => (
                 <tr
-                  key={user.address}
+                  key={user.walletAddress}
                   className="border-b animate-in slide-in-from-left-4 duration-300"
                   style={{ animationDelay: `${450 + index * 50}ms` }}
                 >
                   <td className="p-2">{user.name}</td>
-                  <td className="p-2 font-mono">{user.address}</td>
+                  <td className="p-2 font-mono">{user.walletAddress}</td>
                   <td className="p-2">{UserRole[user.role]}</td>
                   <td className="p-2">
                     <UpdateUserRoleForm
-                      walletAddress={user.address}
+                      walletAddress={user.walletAddress}
                       currentRole={user.role}
-                      onSuccess={(newRole) => {
-                        setTestUsers((users) =>
-                          users.map((u) =>
-                            u.address === user.address
-                              ? { ...u, role: newRole }
-                              : u
-                          )
-                        );
-                      }}
+                      onSuccess={() => refetch()}
                     />
                   </td>
                 </tr>
