@@ -189,6 +189,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           {filteredNavItems.map((item, index) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
+            // Shepherd tour class mapping
+            let shepherdClass = '';
+            if (item.title === 'Dashboard') shepherdClass = 'sidebar-dashboard';
+            if (item.title === 'Transactions')
+              shepherdClass = 'sidebar-transactions';
+            if (item.title === 'Approvals') shepherdClass = 'sidebar-approvals';
+            if (item.title === 'Users') shepherdClass = 'sidebar-users';
             return (
               <Tooltip key={item.href} delayDuration={200}>
                 <TooltipTrigger asChild>
@@ -196,10 +203,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                     href={item.href}
                     className={cn(
                       'flex items-center space-x-3 px-3 py-3 rounded-lg transition-all duration-200 group relative font-medium text-left',
-                      'hover:bg-accent hover:text-accent-foreground hover:shadow-sm',
-                      isActive &&
-                        'bg-primary text-primary-foreground shadow-md',
-                      isCollapsed && 'justify-center px-0 w-12 h-12 mx-auto'
+                      isActive
+                        ? 'bg-primary text-primary-foreground font-bold shadow'
+                        : 'hover:bg-muted hover:text-foreground hover:font-semibold',
+                      isCollapsed && 'justify-center px-0 w-12 h-12 mx-auto',
+                      shepherdClass
                     )}
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
@@ -246,7 +254,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                     onClick={disconnect}
                     className={cn(
                       'w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 font-semibold text-base py-3 rounded-lg transition-all duration-200 text-left',
-                      isCollapsed && 'w-12 h-12 p-0 justify-center text-center'
+                      isCollapsed && 'w-12 h-12 p-0 justify-center text-center',
+                      'disconnect-btn'
                     )}
                   >
                     <LogOut className={cn('w-5 h-5', !isCollapsed && 'mr-2')} />
@@ -324,4 +333,3 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     </>
   );
 };
- 

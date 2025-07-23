@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -110,6 +110,39 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* Shepherd.js popover override for custom Card look */
+.shepherd-element,
+.shepherd-element .shepherd-content {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.shepherd-element .shepherd-content {
+  padding: 0 !important;
+}
+
+/* Shepherd.js cancel (X) button styling */
+.shepherd-element .shepherd-cancel-icon {
+  position: absolute !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  color: #000 !important;
+  background: transparent !important;
+  border: none !important;
+  z-index: 50 !important;
+  opacity: 1 !important;
+  font-size: 1.5rem !important;
+  transition: color 0.2s;
+}
+.shepherd-element .shepherd-cancel-icon:hover {
+  color: #ef4444 !important; /* Tailwind red-500 for hover */
+  background: transparent !important;
 }
 
 @layer base {

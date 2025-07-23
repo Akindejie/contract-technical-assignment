@@ -49,6 +49,16 @@ export const Header: React.FC = () => {
 
         {/* Right side - Wallet connection and user menu */}
         <div className="flex items-center space-x-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden md:inline-flex"
+            onClick={() =>
+              window.dispatchEvent(new Event('start-shepherd-tour'))
+            }
+          >
+            Show Tour
+          </Button>
           {isConnected ? (
             user ? (
               <DropdownMenu>

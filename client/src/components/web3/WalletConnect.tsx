@@ -40,7 +40,12 @@ export const WalletConnect: React.FC = () => {
             {error}
           </Badge>
         )}
-        <Button onClick={connect} disabled={isLoading} size="sm">
+        <Button
+          onClick={connect}
+          disabled={isLoading}
+          size="sm"
+          className="wallet-connect-btn"
+        >
           <Wallet className="w-4 h-4 mr-2" />
           {isLoading ? 'Connecting...' : 'Connect Wallet'}
         </Button>
