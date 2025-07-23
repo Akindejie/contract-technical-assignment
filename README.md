@@ -51,22 +51,36 @@ contract-technical-assignment/
 ├── client/                 # Frontend application
 │   ├── src/
 │   │   ├── app/           # Next.js App Router pages
-│   │   │   ├── dashboard/ # Main dashboard
-│   │   │   ├── transactions/ # Transaction management
-│   │   │   ├── approvals/ # Approval workflow
-│   │   │   └── users/     # User management
+│   │   │   ├── dashboard/     # Dashboard page
+│   │   │   ├── transactions/  # Transaction management (with [id]/ for details)
+│   │   │   ├── approvals/     # Approval workflow
+│   │   │   ├── users/         # User management
+│   │   │   ├── layout.tsx     # App layout
+│   │   │   ├── providers.tsx  # App providers
+│   │   │   └── globals.css    # Global styles (Tailwind, Shepherd, etc.)
 │   │   ├── components/    # Reusable UI components
-│   │   │   ├── layout/    # Header, Sidebar, etc.
-│   │   │   ├── ui/        # shadcn/ui components
-│   │   │   └── web3/      # Wallet connection
+│   │   │   ├── layout/        # Header, Sidebar, etc.
+│   │   │   ├── ui/            # shadcn/ui components (Button, Card, etc.)
+│   │   │   ├── onboarding/    # AppTour and onboarding components
+│   │   │   ├── dashboard/     # Dashboard widgets (e.g., TransactionChart)
+│   │   │   ├── transactions/  # Transaction forms/components
+│   │   │   ├── approvals/     # Approval-related components
+│   │   │   └── web3/          # Wallet connection (WalletConnect)
 │   │   ├── lib/          # Utilities and custom hooks
+│   │   │   ├── hooks/         # useWallet, useContract, useContractEvents
+│   │   │   ├── schemas/       # Zod schemas for forms
+│   │   │   ├── web3/          # Ethers/web3 provider utilities
+│   │   │   ├── errors.ts      # Error helpers
+│   │   │   └── utils.ts       # General utilities
 │   │   ├── types/        # TypeScript definitions
-│   │   └── constants/    # Contract ABIs and configs
+│   │   ├── constants/    # Contract ABIs, addresses, network configs
 │   └── public/           # Static assets
 └── contract/             # Smart contracts
-    ├── contracts/        # Solidity contracts
-    ├── scripts/         # Deployment scripts
-    └── test/           # Contract tests
+    ├── contracts/        # Solidity contracts (FinancialPlatform, MockToken)
+    ├── scripts/          # Deployment and setup scripts
+    ├── test/             # Contract tests
+    ├── deployment-info.json # Deployment metadata
+    └── hardhat.config.js # Hardhat config
 ```
 
 ## 🚀 Quick Start
