@@ -85,7 +85,7 @@ pids
 .dynamodb/
 
 # TernJS port file
-.tern-port
+.tern-port 
 
 # Temporary files
 *.tmp

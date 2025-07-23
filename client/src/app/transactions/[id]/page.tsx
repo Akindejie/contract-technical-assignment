@@ -8,6 +8,8 @@ import {
   useUser,
   useCompleteTransaction,
   useRequestApproval,
+  useApproval,
+  useUser as useUserByAddress,
 } from '@/lib/hooks/useContract';
 import { TransactionStatus, UserRole } from '@/types/contracts';
 import { formatTokenAmount, formatAddress } from '@/lib/web3/provider';
@@ -41,9 +43,15 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+import { extractErrorMessage } from '@/lib/errors';
 
-const getStatusConfig = (status: TransactionStatus) => {
-  switch (status) {
+// Improved status config
+const getStatusConfig = (
+  status: TransactionStatus | number | string | bigint
+) => {
+  const num = typeof status === 'bigint' ? Number(status) : Number(status);
+  switch (num) {
     case TransactionStatus.Pending:
       return {
         label: 'Pending',
@@ -52,9 +60,9 @@ const getStatusConfig = (status: TransactionStatus) => {
       };
     case TransactionStatus.Active:
       return {
-        label: 'Active',
+        label: 'Approved',
         color: 'bg-blue-100 text-blue-800 border-blue-200',
-        icon: AlertCircle,
+        icon: CheckCircle,
       };
     case TransactionStatus.Completed:
       return {
@@ -91,6 +99,15 @@ export default function TransactionDetailsPage() {
   const { data: transaction, isLoading } = useTransaction(
     Number(transactionId)
   );
+
+  // Add approval fetching (after transaction is loaded)
+  const approvalIdNum =
+    Number(transaction?.approvalId) > 0
+      ? Number(transaction?.approvalId)
+      : undefined;
+  const { data: approval } = useApproval(approvalIdNum);
+  const approverAddress = approval?.approver || '';
+  const { data: approverUser } = useUserByAddress(approverAddress);
 
   if (!isConnected) {
     return (
@@ -167,11 +184,27 @@ export default function TransactionDetailsPage() {
     );
   }
 
-  // Helper: Show request approval if owner, pending, and approvalId is 0
-  const canRequestApproval =
-    isOwner &&
-    transaction.status === TransactionStatus.Pending &&
-    transaction.approvalId.toString() === '0';
+  // Normalize for robust comparison
+  const statusNum =
+    typeof transaction.status === 'bigint'
+      ? Number(transaction.status)
+      : Number(transaction.status);
+  const approvalIdStr =
+    transaction.approvalId?.toString?.() ?? String(transaction.approvalId);
+
+  const isPendingLike =
+    statusNum === TransactionStatus.Pending ||
+    statusNum === 0 ||
+    statusNum === undefined ||
+    statusNum === null;
+  const approvalIdIsZero = !approvalIdStr || approvalIdStr === '0';
+
+  const canRequestApproval = isOwner && isPendingLike && approvalIdIsZero;
+
+  const canRequestApprovalByManager =
+    (user?.role === UserRole.Manager || user?.role === UserRole.Admin) &&
+    isPendingLike &&
+    approvalIdIsZero;
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
@@ -323,24 +356,40 @@ export default function TransactionDetailsPage() {
                     </div>
                   </div>
 
-                  {transaction.status !== TransactionStatus.Pending && (
+                  {/* Show approval/rejection only for Active, Completed, or Rejected status */}
+                  {(statusNum === TransactionStatus.Active ||
+                    statusNum === TransactionStatus.Completed ||
+                    statusNum === TransactionStatus.Rejected) && (
                     <div className="flex items-center space-x-3">
                       <div
                         className={`w-2 h-2 rounded-full ${
-                          transaction.status === TransactionStatus.Rejected
+                          statusNum === TransactionStatus.Rejected
                             ? 'bg-red-500'
                             : 'bg-green-500'
                         }`}
                       />
                       <div className="flex-1">
                         <p className="text-sm font-medium">
-                          {transaction.status === TransactionStatus.Rejected
+                          {statusNum === TransactionStatus.Rejected
                             ? 'Transaction Rejected'
-                            : 'Transaction Approved'}
+                            : statusNum === TransactionStatus.Active
+                            ? 'Transaction Approved'
+                            : 'Transaction Completed'}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          Processed by manager
-                        </p>
+                        {approval && (
+                          <p className="text-xs text-muted-foreground">
+                            By:{' '}
+                            {approval.approver
+                              ? `${approval.approver.slice(
+                                  0,
+                                  6
+                                )}...${approval.approver.slice(-4)}`
+                              : 'Unknown'}
+                            {approverUser && (
+                              <span> ({UserRole[approverUser.role]})</span>
+                            )}
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -371,6 +420,80 @@ export default function TransactionDetailsPage() {
                     <DialogTrigger asChild>
                       <Button className="w-full" variant="outline">
                         Request Approval
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Request Approval</DialogTitle>
+                        <DialogDescription>
+                          Enter a reason for requesting approval for this
+                          transaction.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form
+                        onSubmit={async (e) => {
+                          e.preventDefault();
+                          requestApprovalMutation.mutate(
+                            {
+                              transactionId: Number(transaction.id),
+                              reason: approvalReason,
+                            },
+                            {
+                              onSuccess: () => {
+                                setIsRequestDialogOpen(false);
+                                setApprovalReason('');
+                              },
+                              onError: (error: unknown) => {
+                                // Log the full error object for debugging
+                                console.error('Request approval error:', error);
+                                toast.error(extractErrorMessage(error));
+                              },
+                            }
+                          );
+                        }}
+                        className="space-y-4"
+                      >
+                        <Input
+                          value={approvalReason}
+                          onChange={(e) => setApprovalReason(e.target.value)}
+                          placeholder="Reason for approval request"
+                          required
+                          disabled={requestApprovalMutation.isPending}
+                        />
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={
+                            requestApprovalMutation.isPending ||
+                            !approvalReason.trim()
+                          }
+                        >
+                          {requestApprovalMutation.isPending
+                            ? 'Requesting...'
+                            : 'Submit Request'}
+                        </Button>
+                        {requestApprovalMutation.isError && (
+                          <p className="text-xs text-red-500 text-center mt-2">
+                            {String(requestApprovalMutation.error)}
+                          </p>
+                        )}
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    This will submit the transaction for manager approval
+                  </p>
+                </div>
+              )}
+              {canRequestApprovalByManager && !canRequestApproval && (
+                <div className="pt-4 border-t">
+                  <Dialog
+                    open={isRequestDialogOpen}
+                    onOpenChange={setIsRequestDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button className="w-full" variant="outline">
+                        Request Approval (Manager/Admin)
                       </Button>
                     </DialogTrigger>
                     <DialogContent>

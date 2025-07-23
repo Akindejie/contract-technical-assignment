@@ -115,6 +115,13 @@ export const FINANCIAL_PLATFORM_ABI = [
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
   },
+  {
+    type: 'function',
+    name: 'getAllTransactions',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256[]' }],
+    stateMutability: 'view',
+  },
 
   // Approval System
   {

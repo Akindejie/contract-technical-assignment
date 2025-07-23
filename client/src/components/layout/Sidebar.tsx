@@ -139,8 +139,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                 {isCollapsed && (
                   <TooltipContent side="right">
                     <div className="font-medium text-sm mb-1">{user.name}</div>
-                    <div className="text-xs font-mono text-muted-foreground mb-1">
-                      {formatAddress(address || '')}
+                    <div className="text-xs font-mono text-muted-foreground mb-1 break-all">
+                      {address || ''}
                     </div>
                     <Badge
                       className={cn('text-xs', getRoleBadgeColor(user.role))}
@@ -175,8 +175,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                   <p className="font-semibold text-base text-center">
                     {user.name}
                   </p>
-                  <p className="text-xs text-muted-foreground font-mono text-center">
-                    {formatAddress(address || '')}
+                  <p className="text-xs text-muted-foreground font-mono text-center break-all">
+                    {address || ''}
                   </p>
                 </div>
               )}
@@ -324,3 +324,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     </>
   );
 };
+ 

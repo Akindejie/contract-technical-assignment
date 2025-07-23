@@ -8,9 +8,11 @@ import {
   useUser,
   useTransaction,
   useProcessApproval,
+  useAllTransactions,
 } from '@/lib/hooks/useContract';
 import { UserRole, Approval, Transaction } from '@/types/contracts';
 import { formatTokenAmount, formatAddress } from '@/lib/web3/provider';
+import { TransactionStatus } from '@/types/contracts';
 import {
   Card,
   CardContent,
@@ -209,6 +211,8 @@ export default function ApprovalsPage() {
   const { isConnected, address } = useWallet();
   const { data: user, isLoading: userLoading } = useUser(address || '');
   const { data: pendingApprovals = [], isLoading } = usePendingApprovals();
+  const { data: allTransactions = [], isLoading: allTransactionsLoading } =
+    useAllTransactions();
   const [selectedApproval, setSelectedApproval] = useState<
     (Approval & { transaction: Transaction }) | null
   >(null);
@@ -224,6 +228,13 @@ export default function ApprovalsPage() {
   // Check if user has approval permissions
   const canApprove =
     user?.role === UserRole.Manager || user?.role === UserRole.Admin;
+
+  // Filter pending transactions that don't have approval requests yet
+  const pendingTransactionsWithoutApproval = allTransactions.filter(
+    (tx) =>
+      tx.status === TransactionStatus.Pending &&
+      tx.approvalId.toString() === '0'
+  );
 
   if (!isConnected) {
     return (
@@ -262,7 +273,7 @@ export default function ApprovalsPage() {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || allTransactionsLoading) {
     return <LoadingPage message="Loading approvals..." />;
   }
 
@@ -284,7 +295,7 @@ export default function ApprovalsPage() {
 
       {/* Stats Cards */}
       <div
-        className="grid gap-4 md:grid-cols-3 animate-in slide-in-from-bottom-4 duration-500"
+        className="grid gap-4 md:grid-cols-4 animate-in slide-in-from-bottom-4 duration-500"
         style={{ animationDelay: '100ms' }}
       >
         <Card
@@ -301,6 +312,26 @@ export default function ApprovalsPage() {
             <div className="text-2xl font-bold">{pendingApprovals.length}</div>
             <p className="text-xs text-muted-foreground">
               Awaiting your review
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card
+          className="animate-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '175ms' }}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Need Approval Request
+            </CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {pendingTransactionsWithoutApproval.length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Pending transactions
             </p>
           </CardContent>
         </Card>
@@ -333,7 +364,11 @@ export default function ApprovalsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {pendingApprovals.length > 0 ? 'Review' : 'None'}
+              {pendingApprovals.length +
+                pendingTransactionsWithoutApproval.length >
+              0
+                ? 'Review'
+                : 'None'}
             </div>
             <p className="text-xs text-muted-foreground">
               Items need attention
@@ -342,7 +377,74 @@ export default function ApprovalsPage() {
         </Card>
       </div>
 
-      {/* Pending Approvals Table */}
+      {/* Pending Transactions Without Approval Requests */}
+      {pendingTransactionsWithoutApproval.length > 0 && (
+        <Card
+          className="animate-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '350ms' }}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <AlertTriangle className="w-5 h-5 mr-2" />
+              Pending Transactions (No Approval Request)
+            </CardTitle>
+            <CardDescription>
+              These transactions are pending but haven&apos;t had approval
+              requested yet
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Transaction ID</TableHead>
+                  <TableHead>From</TableHead>
+                  <TableHead>To</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingTransactionsWithoutApproval.map((tx, index) => (
+                  <TableRow
+                    key={tx.id.toString()}
+                    className="animate-in slide-in-from-left-4 duration-300"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <TableCell className="font-medium">
+                      #{tx.id.toString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-mono text-sm">
+                        {formatAddress(tx.from)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-mono text-sm">
+                        {formatAddress(tx.to)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {formatTokenAmount(tx.amount)} ETH
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {tx.description}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(
+                        Number(tx.timestamp) * 1000
+                      ).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pending Approval Requests Table */}
       <Card
         className="animate-in slide-in-from-bottom-4 duration-500"
         style={{ animationDelay: '300ms' }}

@@ -8,6 +8,8 @@ import {
   useUpdateUserRole,
 } from '@/lib/hooks/useContract';
 import { UserRole } from '@/types/contracts';
+import { getAddress } from 'ethers';
+import { extractErrorMessage } from '@/lib/errors';
 
 import {
   Card,
@@ -101,7 +103,9 @@ const RegisterUserForm: React.FC<RegisterUserFormProps> = ({ onSuccess }) => {
       reset();
       onSuccess?.();
     } catch (error) {
-      console.error('Error registering user:', error);
+      const message = extractErrorMessage(error);
+      console.error('Error registering user:', message);
+      // Optionally show a toast or set an error state here
     }
   };
 
@@ -121,9 +125,9 @@ const RegisterUserForm: React.FC<RegisterUserFormProps> = ({ onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 p-2">
       {/* Wallet Address */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="walletAddress">Wallet Address *</Label>
         <Input
           id="walletAddress"
@@ -142,7 +146,7 @@ const RegisterUserForm: React.FC<RegisterUserFormProps> = ({ onSuccess }) => {
       </div>
 
       {/* Name */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="name">Full Name *</Label>
         <Input
           id="name"
@@ -158,7 +162,7 @@ const RegisterUserForm: React.FC<RegisterUserFormProps> = ({ onSuccess }) => {
       </div>
 
       {/* Email */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="email">Email Address *</Label>
         <Input
           id="email"
@@ -174,7 +178,7 @@ const RegisterUserForm: React.FC<RegisterUserFormProps> = ({ onSuccess }) => {
       </div>
 
       {/* Role */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="role">User Role *</Label>
         <Select
           value={watch('role')}
@@ -216,7 +220,7 @@ const RegisterUserForm: React.FC<RegisterUserFormProps> = ({ onSuccess }) => {
       <Separator />
 
       {/* User Summary */}
-      <div className="space-y-3 p-4 bg-muted rounded-lg">
+      <div className="space-y-4 p-6 bg-muted rounded-lg">
         <h4 className="font-medium">Registration Summary</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
@@ -246,7 +250,7 @@ const RegisterUserForm: React.FC<RegisterUserFormProps> = ({ onSuccess }) => {
       </div>
 
       {/* Submit Button */}
-      <div className="flex gap-3">
+      <div className="flex gap-4 pt-2">
         <Button
           type="button"
           variant="outline"
@@ -272,7 +276,7 @@ const RegisterUserForm: React.FC<RegisterUserFormProps> = ({ onSuccess }) => {
       </div>
 
       {/* Help Text */}
-      <div className="text-xs text-muted-foreground space-y-1">
+      <div className="text-xs text-muted-foreground space-y-2 pt-2">
         <p>• Only admins can register new users</p>
         <p>
           • Users will be able to connect with their wallet address immediately
@@ -287,19 +291,26 @@ const RegisterUserForm: React.FC<RegisterUserFormProps> = ({ onSuccess }) => {
 const UpdateUserRoleForm: React.FC<{
   walletAddress: string;
   currentRole: UserRole;
-  onSuccess?: () => void;
+  onSuccess?: (newRole: UserRole) => void;
 }> = ({ walletAddress, currentRole, onSuccess }) => {
   const updateUserRoleMutation = useUpdateUserRole();
   const [role, setRole] = React.useState<UserRole>(currentRole);
+  const [error, setError] = React.useState<string | null>(null);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (role === currentRole) return;
+    setError(null);
     try {
-      await updateUserRoleMutation.mutateAsync({ walletAddress, role });
-      onSuccess?.();
-    } catch {
-      // error handled by hook
+      // Normalize and validate the address
+      const normalizedAddress = getAddress(walletAddress);
+      await updateUserRoleMutation.mutateAsync({
+        walletAddress: normalizedAddress,
+        role,
+      });
+      onSuccess?.(role);
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err));
     }
   };
 
@@ -325,11 +336,39 @@ const UpdateUserRoleForm: React.FC<{
       >
         {updateUserRoleMutation.isPending ? 'Updating...' : 'Update'}
       </Button>
+      {error && <span className="text-xs text-red-500 ml-2">{error}</span>}
     </form>
   );
 };
 
 export default function UsersPage() {
+  const [testUsers, setTestUsers] = useState([
+    {
+      name: 'Platform Admin',
+      address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+      role: UserRole.Admin,
+    },
+    {
+      name: 'John Manager',
+      address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+      role: UserRole.Manager,
+    },
+    {
+      name: 'Alice User',
+      address: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+      role: UserRole.Regular,
+    },
+    {
+      name: 'Bob User',
+      address: '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
+      role: UserRole.Regular,
+    },
+    {
+      name: 'Sarah Approver',
+      address: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
+      role: UserRole.Manager,
+    },
+  ]);
   const { isConnected, address } = useWallet();
   const { data: user } = useUser(address || '');
   const [isRegisterDialogOpen, setIsRegisterDialogOpen] = useState(false);
@@ -370,21 +409,6 @@ export default function UsersPage() {
     );
   }
 
-  // Fetch all users for management (simulate with a list for now)
-  // In a real app, you would fetch all users from the contract
-  // For demo, let's assume a static list of test accounts (from deployment)
-  const testUsers = [
-    { name: 'Platform Admin', address: '0xf39F...2266', role: UserRole.Admin },
-    { name: 'John Manager', address: '0x7099...79C8', role: UserRole.Manager },
-    { name: 'Alice User', address: '0x3C44...93BC', role: UserRole.Regular },
-    { name: 'Bob User', address: '0x90F7...b906', role: UserRole.Regular },
-    {
-      name: 'Sarah Approver',
-      address: '0x15d3...6A65',
-      role: UserRole.Manager,
-    },
-  ];
-
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2 animate-in slide-in-from-top-4 duration-500">
@@ -411,7 +435,7 @@ export default function UsersPage() {
                 Register User
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Register New User</DialogTitle>
                 <DialogDescription>
@@ -659,6 +683,15 @@ export default function UsersPage() {
                     <UpdateUserRoleForm
                       walletAddress={user.address}
                       currentRole={user.role}
+                      onSuccess={(newRole) => {
+                        setTestUsers((users) =>
+                          users.map((u) =>
+                            u.address === user.address
+                              ? { ...u, role: newRole }
+                              : u
+                          )
+                        );
+                      }}
                     />
                   </td>
                 </tr>

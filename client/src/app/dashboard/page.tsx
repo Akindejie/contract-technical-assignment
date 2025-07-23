@@ -111,11 +111,11 @@ const ActivityFeed: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <Badge variant="outline" className="text-xs">
-                    {TransactionStatus[tx.status]}
-                  </Badge>
+                  {TransactionStatus[tx.status]}
+                </Badge>
                   <p className="text-xs text-muted-foreground mt-1">
                     {new Date(Number(tx.timestamp) * 1000).toLocaleDateString()}
-                  </p>
+                    </p>
                 </div>
               </div>
             ))}
@@ -218,7 +218,7 @@ export default function DashboardPage() {
       {/* Activity Feed */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
         <div className="col-span-1 md:col-span-2 lg:col-span-4">
-          <ActivityFeed />
+        <ActivityFeed />
         </div>
 
         {/* Quick Actions */}

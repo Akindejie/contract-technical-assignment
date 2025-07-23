@@ -141,7 +141,11 @@ async function main() {
   await user3Platform.requestApproval(3, 'Business expense reimbursement');
   console.log('Requested approval for transaction 3');
 
-  // Process some approvals
+  // NOTE: Leaving transactions in pending state for manual approval testing
+  // Managers/Admins can approve these through the web interface
+
+  /*
+  // Process some approvals (commented out for testing)
   console.log('Processing approvals...');
   const approver1Platform = financialPlatform.connect(approver1);
 
@@ -164,6 +168,7 @@ async function main() {
   // Complete approved transaction
   await user2Platform.completeTransaction(1);
   console.log('Completed transaction 1');
+  */
 
   console.log('\nDeployment and setup completed successfully!');
   console.log('\nContract Addresses:');

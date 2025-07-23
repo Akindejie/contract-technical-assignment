@@ -2,7 +2,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "deploy:holesky": "hardhat run --network holesky scripts/deploy.ts"
+    "deploy:sepolia": "hardhat run --network sepolia scripts/deploy.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",

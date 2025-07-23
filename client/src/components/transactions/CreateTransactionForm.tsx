@@ -5,7 +5,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ethers } from 'ethers';
-import { useCreateTransaction } from '@/lib/hooks/useContract';
+import {
+  useCreateTransaction,
+  useUserTransactions,
+  useRequestApproval,
+} from '@/lib/hooks/useContract';
+import { useWallet } from '@/lib/hooks/useWallet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,7 +49,12 @@ interface CreateTransactionFormProps {
 export const CreateTransactionForm: React.FC<CreateTransactionFormProps> = ({
   onSuccess,
 }) => {
+  const { address } = useWallet();
   const createTransactionMutation = useCreateTransaction();
+  const requestApprovalMutation = useRequestApproval();
+  const { refetch: refetchUserTransactions } = useUserTransactions(
+    address || ''
+  );
 
   const {
     register,
@@ -63,22 +73,39 @@ export const CreateTransactionForm: React.FC<CreateTransactionFormProps> = ({
     try {
       const amountInWei = ethers.parseEther(data.amount);
 
-      await createTransactionMutation.mutateAsync({
+      // Step 1: Create the transaction and get its ID
+      const transactionId = await createTransactionMutation.mutateAsync({
         to: data.to,
         amount: amountInWei,
         description: data.description,
       });
 
-      toast.success('Transaction created successfully!');
+      // Step 2: Automatically request approval for the new transaction
+      try {
+        await requestApprovalMutation.mutateAsync({
+          transactionId,
+          reason: 'Automatic approval request after transaction creation',
+        });
+        toast.success(
+          'Transaction created and approval requested successfully!'
+        );
+      } catch (approvalError) {
+        // Only show a gentle info toast, not a blocking error
+        toast.info(
+          'Transaction created, but automatic approval request failed. You can request approval manually from the transaction details page.'
+        );
+      }
+
       reset();
       onSuccess?.();
     } catch (error) {
       console.error('Error creating transaction:', error);
-      toast.error('Failed to create transaction. Please try again.');
+      // The useCreateTransaction hook already shows a toast on error
     }
   };
 
-  const isLoading = createTransactionMutation.isPending;
+  const isLoading =
+    createTransactionMutation.isPending || requestApprovalMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -174,7 +201,9 @@ export const CreateTransactionForm: React.FC<CreateTransactionFormProps> = ({
         {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Creating Transaction...
+            {createTransactionMutation.isPending
+              ? 'Creating Transaction...'
+              : 'Requesting Approval...'}
           </>
         ) : (
           <>
@@ -186,10 +215,10 @@ export const CreateTransactionForm: React.FC<CreateTransactionFormProps> = ({
 
       {/* Help Text */}
       <div className="text-xs text-muted-foreground space-y-1">
+        <p>• Transactions will automatically request approval after creation</p>
         <p>
-          • Transactions above certain thresholds may require manager approval
+          • Approved transactions can be completed by the transaction creator
         </p>
-        <p>• Once created, approved transactions can be completed by you</p>
         <p>• Make sure the recipient address is correct before submitting</p>
       </div>
     </form>

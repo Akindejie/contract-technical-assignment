@@ -1,3 +1,4 @@
+// React hook for subscribing to smart contract events and updating app state/UI accordingly
 import { useEffect } from 'react';
 import { useWallet } from './useWallet';
 import { getContract } from '@/lib/web3/provider';
@@ -12,28 +13,33 @@ import {
   UserRegisteredHandler,
 } from '@/types/contracts';
 
+// Main hook to set up and clean up contract event listeners
 export const useContractEvents = () => {
   const { provider, chainId, address } = useWallet();
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    // Only set up listeners if wallet and provider are available
     if (!provider || !chainId || !address) return;
 
     let contract: ReturnType<typeof getContract>;
 
     try {
+      // Get the contract instance for the current network
       contract = getContract('financialPlatform', chainId, provider);
     } catch (error) {
       console.error('Failed to get contract for events:', error);
       return;
     }
 
-    // Transaction Created Event
+    // --- Event Handlers ---
+
+    // Handle TransactionCreated event
     const handleTransactionCreated: TransactionCreatedHandler = (
-      transactionId: bigint,
-      from: string,
-      to: string,
-      amount: bigint
+      transactionId,
+      from,
+      to,
+      amount
     ) => {
       console.log('🔔 TransactionCreated event:', {
         transactionId,
@@ -49,7 +55,7 @@ export const useContractEvents = () => {
         toast.info(`You received a transaction #${transactionId}!`);
       }
 
-      // Invalidate relevant queries
+      // Invalidate relevant queries to refresh UI
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.USER_TRANSACTIONS],
       });
@@ -58,16 +64,17 @@ export const useContractEvents = () => {
       });
     };
 
-    // Transaction Status Updated Event
+    // Handle TransactionStatusUpdated event
     const handleTransactionStatusUpdated: TransactionStatusUpdatedHandler = (
-      transactionId: bigint,
-      status: number
+      transactionId,
+      status
     ) => {
       console.log('🔔 TransactionStatusUpdated event:', {
         transactionId,
         status,
       });
 
+      // Map status number to text
       const statusText =
         ['Pending', 'Active', 'Completed', 'Rejected'][status] || 'Unknown';
       toast.info(
@@ -86,11 +93,11 @@ export const useContractEvents = () => {
       });
     };
 
-    // Approval Requested Event
+    // Handle ApprovalRequested event
     const handleApprovalRequested: ApprovalRequestedHandler = (
-      approvalId: bigint,
-      transactionId: bigint,
-      requester: string
+      approvalId,
+      transactionId,
+      requester
     ) => {
       console.log('🔔 ApprovalRequested event:', {
         approvalId,
@@ -98,6 +105,7 @@ export const useContractEvents = () => {
         requester,
       });
 
+      // Notify requester
       if (requester.toLowerCase() === address.toLowerCase()) {
         toast.info(
           `Approval #${approvalId} requested for transaction #${transactionId}`
@@ -113,11 +121,11 @@ export const useContractEvents = () => {
       });
     };
 
-    // Approval Processed Event
+    // Handle ApprovalProcessed event
     const handleApprovalProcessed: ApprovalProcessedHandler = (
-      approvalId: bigint,
-      status: number,
-      approver: string
+      approvalId,
+      status,
+      approver
     ) => {
       console.log('🔔 ApprovalProcessed event:', {
         approvalId,
@@ -125,9 +133,11 @@ export const useContractEvents = () => {
         approver,
       });
 
+      // Map status number to text
       const statusText =
         ['Pending', 'Approved', 'Rejected'][status] || 'Unknown';
 
+      // Notify approver or general info
       if (approver.toLowerCase() === address.toLowerCase()) {
         toast.success(
           `You ${statusText.toLowerCase()} approval #${approvalId}`
@@ -148,12 +158,12 @@ export const useContractEvents = () => {
       });
     };
 
-    // User Registered Event
+    // Handle UserRegistered event
     const handleUserRegistered: UserRegisteredHandler = (
-      userId: bigint,
-      walletAddress: string,
-      name: string,
-      role: number
+      userId,
+      walletAddress,
+      name,
+      role
     ) => {
       console.log('🔔 UserRegistered event:', {
         userId,
@@ -162,6 +172,7 @@ export const useContractEvents = () => {
         role,
       });
 
+      // Welcome notification for the new user
       if (walletAddress.toLowerCase() === address.toLowerCase()) {
         toast.success(`Welcome ${name}! Your account has been registered.`);
       }
@@ -173,7 +184,7 @@ export const useContractEvents = () => {
       });
     };
 
-    // Set up event listeners
+    // --- Set up event listeners on the contract ---
     try {
       contract.on('TransactionCreated', handleTransactionCreated);
       contract.on('TransactionStatusUpdated', handleTransactionStatusUpdated);
@@ -186,7 +197,7 @@ export const useContractEvents = () => {
       console.error('Failed to set up contract event listeners:', error);
     }
 
-    // Cleanup function
+    // --- Cleanup function to remove listeners when component unmounts or deps change ---
     return () => {
       try {
         contract.off('TransactionCreated', handleTransactionCreated);

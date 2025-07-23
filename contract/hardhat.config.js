@@ -1,11 +1,9 @@
-require("@nomicfoundation/hardhat-toolbox");
-const dotenv = require("dotenv");
-
-dotenv.config();
+require('@nomicfoundation/hardhat-toolbox');
+require('dotenv').config();
 
 const config = {
   solidity: {
-    version: "0.8.22",
+    version: '0.8.22',
     settings: {
       viaIR: true, // Enable viaIR to handle stack too deep errors
       optimizer: {
@@ -15,18 +13,20 @@ const config = {
     },
   },
   networks: {
-    holesky: {
-      url: process.env.HOLESKY_RPC_URL || "https://ethereum-holesky.publicnode.com",
+    sepolia: {
+      url:
+        process.env.SEPOLIA_RPC_URL ||
+        'https://sepolia.infura.io/v3/YOUR_INFURA_KEY',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 17000,
+      chainId: 11155111,
       timeout: 120000, // 2 minutes timeout
-      gasPrice: "auto",
-      gas: "auto",
+      gasPrice: 'auto',
+      gas: 'auto',
     },
   },
   etherscan: {
     apiKey: {
-      holesky: process.env.ETHERSCAN_API_KEY || "",
+      sepolia: process.env.ETHERSCAN_API_KEY || '',
     },
   },
 };

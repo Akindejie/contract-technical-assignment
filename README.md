@@ -98,15 +98,15 @@ Create `.env.local` in the `client` directory:
 
 ```env
 # Network Configuration
-NEXT_PUBLIC_HOLESKY_RPC_URL=https://ethereum-holesky.publicnode.com
+NEXT_PUBLIC_SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID
 
 # Contract Addresses - Localhost (Hardhat)
 NEXT_PUBLIC_FINANCIAL_PLATFORM_ADDRESS_LOCALHOST=
 NEXT_PUBLIC_MOCK_TOKEN_ADDRESS_LOCALHOST=
 
-# Contract Addresses - Holesky Testnet
-NEXT_PUBLIC_FINANCIAL_PLATFORM_ADDRESS_HOLESKY=
-NEXT_PUBLIC_MOCK_TOKEN_ADDRESS_HOLESKY=
+# Contract Addresses - Sepolia Testnet
+NEXT_PUBLIC_FINANCIAL_PLATFORM_ADDRESS_SEPOLIA=
+NEXT_PUBLIC_MOCK_TOKEN_ADDRESS_SEPOLIA=
 ```
 
 ### 3. Deploy Smart Contracts
@@ -206,7 +206,7 @@ npm start
 ### Networks Supported
 
 - **Localhost**: Development and testing
-- **Holesky Testnet**: Testnet deployment
+- **Sepolia Testnet**: Testnet deployment
 
 ### Environment Variables
 

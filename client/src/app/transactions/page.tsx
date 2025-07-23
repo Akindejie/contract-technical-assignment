@@ -55,21 +55,27 @@ import {
 } from 'lucide-react';
 import { CreateTransactionForm } from '@/components/transactions/CreateTransactionForm';
 
-const getStatusIcon = (status: TransactionStatus) => {
-  switch (status) {
+const getStatusIcon = (
+  status: TransactionStatus | number | string | bigint
+) => {
+  const num = typeof status === 'bigint' ? Number(status) : Number(status);
+  switch (num) {
     case TransactionStatus.Completed:
       return <CheckCircle className="w-4 h-4 text-green-500" />;
     case TransactionStatus.Rejected:
       return <XCircle className="w-4 h-4 text-red-500" />;
     case TransactionStatus.Active:
-      return <AlertCircle className="w-4 h-4 text-blue-500" />;
+      return <CheckCircle className="w-4 h-4 text-blue-500" />;
     case TransactionStatus.Pending:
     default:
       return <Clock className="w-4 h-4 text-yellow-500" />;
   }
 };
 
-const getStatusBadge = (status: TransactionStatus) => {
+const getStatusBadge = (
+  status: TransactionStatus | number | string | bigint
+) => {
+  const num = typeof status === 'bigint' ? Number(status) : Number(status);
   const config = {
     [TransactionStatus.Completed]: {
       variant: 'default' as const,
@@ -81,15 +87,25 @@ const getStatusBadge = (status: TransactionStatus) => {
     },
     [TransactionStatus.Active]: {
       variant: 'secondary' as const,
-      label: 'Active',
+      label: 'Approved',
     },
     [TransactionStatus.Pending]: {
       variant: 'outline' as const,
       label: 'Pending',
     },
   };
-
-  const { variant, label } = config[status];
+  const { variant, label } = (
+    config as Record<
+      number,
+      {
+        variant: 'default' | 'destructive' | 'secondary' | 'outline';
+        label: string;
+      }
+    >
+  )[num] || {
+    variant: 'outline' as const,
+    label: 'Unknown',
+  };
   return <Badge variant={variant}>{label}</Badge>;
 };
 

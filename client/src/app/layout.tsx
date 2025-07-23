@@ -9,8 +9,8 @@ import { Toaster } from '@/components/ui/sonner';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Financial Dashboard',
-  description: 'A comprehensive financial management platform',
+  title: 'Oumla',
+  description: 'Oumla',
 };
 
 export default function RootLayout({
